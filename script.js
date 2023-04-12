@@ -55,18 +55,18 @@ function Player(pos, speed) {
 
     this.brain = new NeuralNetwork(4, 4, 2);
     this.think = function(){
-        let inputs = [];
-        inputs[0] = this.pos.y;
+        // let inputs = [];
+        // inputs[0] = this.pos.y;
 
-        console.log(pipes);
+        // console.log(pipes);
 
-        // let inputs = [0.75, 0.23, 0.98, 0.02]
-        // let output = this.brain.predict(inputs);
+        let inputs = [Math.random(), Math.random(), Math.random(), Math.random()]
+        let output = this.brain.predict(inputs);
 
-        // if (output[0] > output[1]){
-        //     this.jump = true;
-        //     console.log(output);
-        // }
+        if (output[0] > output[1]){
+            this.jump = true;
+            // console.log(output);
+        }
     };
     this.draw = function() {
         game.ctx.fillStyle = "black";
