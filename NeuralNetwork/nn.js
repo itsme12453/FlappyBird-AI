@@ -96,7 +96,7 @@ class NeuralNetwork {
         outputs.add(this.bias_o);
         outputs.map(this.activation_function.func);
 
-        // Convert array to matrix object
+        // Convert array to matrix obj
         let targets = Matrix.fromArray(target_array);
 
         // Calculate the error

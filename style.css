@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Tilt+Warp&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Tilt+Warp&display=swap'); */
 
 body {
     overflow: hidden;
@@ -11,8 +11,4 @@ body {
 canvas {
     /* background-color: #333333; */
     border: 1px solid black;
-}
-
-text {
-    font-size: 5em;
 }

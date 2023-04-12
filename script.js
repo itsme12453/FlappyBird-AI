@@ -1,6 +1,7 @@
 // const nn = new NeuralNetwork(3, 4, 1);
+const PLAYER_COUNT = 100;
 
-let player;
+let players = [];
 let playing = false;
 let pipes = [];
 
@@ -17,7 +18,10 @@ function startGame() {
     game.start();
     game.notReadyScreen();
 
-    player = new Player(new Vector2D(150, 250), 3);
+    for (i = 0; i < PLAYER_COUNT; i++){
+        players.push(new Player(new Vector2D(150, 250), 3));
+    }
+    // player = new Player(new Vector2D(150, 250), 3);
 
     animate();
 }
@@ -63,14 +67,21 @@ function Player(pos, speed) {
         let inputs = [Math.random(), Math.random(), Math.random(), Math.random()]
         let output = this.brain.predict(inputs);
 
+        // console.log(output);
+
         if (output[0] > output[1]){
             this.jump = true;
             // console.log(output);
         }
     };
     this.draw = function() {
+        // game.ctx.fillStyle = "black";
+        // game.ctx.fillRect(this.pos.x, this.pos.y, 35, 35);
+
+        game.ctx.beginPath();
+        game.ctx.arc(this.pos.x, this.pos.y, 20, 0, 2 * Math.PI, false);
         game.ctx.fillStyle = "black";
-        game.ctx.fillRect(this.pos.x, this.pos.y, 35, 35);
+        game.ctx.fill();
     };
     this.update = function() {
         this.velocity += this.gravity;
@@ -82,7 +93,13 @@ function Player(pos, speed) {
             this.jump = false;
         }
 
-        this.pos.x += this.speed;
+        if (this.pos.y < 20){
+            this.pos.y = 20;
+        } else if (this.pos.y > 500-20){
+            this.pos.y = 500-20;
+        }
+
+        // this.pos.x += this.speed;
     };
 };
 
@@ -97,6 +114,8 @@ function PipePair(pos){
     this.bottomHeight = 500 - (this.topHeight + this.gap)
 
     this.draw = function() {
+        this.pos.x -= 3;
+
         game.ctx.fillStyle = "black";
         game.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.topHeight);
 
@@ -121,7 +140,14 @@ document.addEventListener("keydown", function(e) {
 //     }
 // });
 
-let pipeX = 500;
+function checkCollision(player, pipe){
+    if(pipe.pos.x < player.pos.x){
+        return false;
+    }
+}
+
+let pipeX = 600;
+let pipeCount = 0;
 
 function animate() {
     setInterval(function() {
@@ -129,18 +155,33 @@ function animate() {
         game.ctx.save();
 
         game.clear();
-        game.ctx.translate(((game.canvas.width / 2) - player.pos.x), 0);
+        game.ctx.translate(((game.canvas.width / 2) - players[0].pos.x), 0);
 
-        // pipes.push(new PipePair(new Vector2D(pipeX, 0)))
-        // pipeX += 250;
+        if (pipeCount % 60 == 0){
+            pipes.push(new PipePair(new Vector2D(pipeX, 0)))
+            pipeX += 100;
+        }
+        pipeCount += 1;
+
+        // console.log(pipes[0].pos.y - players[0].pos.y)
 
         for(let i = 0; i < pipes.length; i++){
             pipes[i].draw();
         }
 
-        player.think();
-        player.draw();
-        player.update();
+        for(let i = 0; i < players.length; i++){
+            players[i].think();
+            players[i].draw();
+            players[i].update();
+        }
+
+        for(let i = 0; i < players.length; i++){
+            for(let j = 0; j < pipes.length; j++){
+                if(checkCollision(players[i], pipes[j])){
+                    console.log("a");
+                }
+            }
+        }
 
         game.ctx.restore();
         // } else {
