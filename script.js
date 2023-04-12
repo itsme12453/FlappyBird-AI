@@ -1,3 +1,5 @@
+// const nn = new NeuralNetwork(3, 4, 1);
+
 let player;
 let playing = false;
 let pipes = [];
@@ -51,6 +53,21 @@ function Player(pos, speed) {
     this.gravity = 0.5;
     this.maxVelocity = 10; // maximum downward velocity
 
+    this.brain = new NeuralNetwork(4, 4, 2);
+    this.think = function(){
+        let inputs = [];
+        inputs[0] = this.pos.y;
+
+        console.log(pipes);
+
+        // let inputs = [0.75, 0.23, 0.98, 0.02]
+        // let output = this.brain.predict(inputs);
+
+        // if (output[0] > output[1]){
+        //     this.jump = true;
+        //     console.log(output);
+        // }
+    };
     this.draw = function() {
         game.ctx.fillStyle = "black";
         game.ctx.fillRect(this.pos.x, this.pos.y, 35, 35);
@@ -68,7 +85,6 @@ function Player(pos, speed) {
         this.pos.x += this.speed;
     };
 };
-
 
 function PipePair(pos){
     this.pos = pos;
@@ -95,40 +111,41 @@ document.addEventListener("keydown", function(e) {
             playing = true;
         }
 
-        player.jump = true;
+        // player.jump = true;
     }
 });
 
-document.addEventListener("keyup", function(e) {
-    if (e.key == " " || e.code == "Space") {
-        player.jump = false;
-    }
-});
+// document.addEventListener("keyup", function(e) {
+//     if (e.key == " " || e.code == "Space") {
+//         player.jump = false;
+//     }
+// });
 
 let pipeX = 500;
 
 function animate() {
     setInterval(function() {
-        if (playing) {
-            game.ctx.save();
+        // if (playing) {
+        game.ctx.save();
 
-            game.clear();
-            game.ctx.translate(((game.canvas.width / 2) - player.pos.x), 0);
+        game.clear();
+        game.ctx.translate(((game.canvas.width / 2) - player.pos.x), 0);
 
-            pipes.push(new PipePair(new Vector2D(pipeX, 0)))
-            pipeX += 250;
+        // pipes.push(new PipePair(new Vector2D(pipeX, 0)))
+        // pipeX += 250;
 
-            for(let i = 0; i < pipes.length; i++){
-                pipes[i].draw();
-            }
-
-            player.draw();
-            player.update();
-
-            game.ctx.restore();
-        } else {
-            game.notReadyScreen();
+        for(let i = 0; i < pipes.length; i++){
+            pipes[i].draw();
         }
+
+        player.think();
+        player.draw();
+        player.update();
+
+        game.ctx.restore();
+        // } else {
+        //     game.notReadyScreen();
+        // }
     }, 1000/60);
 }
 
