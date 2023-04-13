@@ -1,4 +1,8 @@
-let player;
+// const nn = new NeuralNetwork(3, 4, 1);
+const PLAYER_COUNT = 100;
+
+let players = [];
+let playing = false;
 let pipes = [];
 
 function setup() {
@@ -91,36 +95,67 @@ class Player {
     }
 }
 
-class Pipe {
-    constructor() {
-        this.spacing = 125;
-        this.topHeight = random(height / 6, 3 / 4 * height);
-        this.bottomHeight = height - (this.topHeight + this.spacing);
-        this.x = width;
-        this.width = 30;
-        this.speed = 4;
-    }
-
-    show() {
-        fill(0);
-        rect(this.x, 0, this.width, this.topHeight);
-        rect(this.x, height - this.bottomHeight, this.width, this.bottomHeight);
-    }
-
-    update() {
-        this.x -= this.speed;
-    }
-
-    offscreen() {
-        return (this.x < -this.width);
-    }
-
-    hits(player) {
-        if ((player.y - player.size / 2) < this.topHeight || (player.y + player.size / 2) > (height - this.bottomHeight)) {
-            if (player.x > this.x && player.x < (this.x + this.width)) {
-                return true;
-            }
+document.addEventListener("keydown", function(e) {
+    if ((e.key == " " || e.code == "Space") && !player.jump) {
+        if (!playing) {
+            playing = true;
         }
+
+        // player.jump = true;
+    }
+
+// document.addEventListener("keyup", function(e) {
+//     if (e.key == " " || e.code == "Space") {
+//         player.jump = false;
+//     }
+// });
+
+function checkCollision(player, pipe){
+    if(pipe.pos.x < player.pos.x){
         return false;
     }
+}
+
+let pipeX = 600;
+let pipeCount = 0;
+
+function animate() {
+    setInterval(function() {
+        // if (playing) {
+        game.ctx.save();
+
+        game.clear();
+        game.ctx.translate(((game.canvas.width / 2) - players[0].pos.x), 0);
+
+        if (pipeCount % 60 == 0){
+            pipes.push(new PipePair(new Vector2D(pipeX, 0)))
+            pipeX += 100;
+        }
+        pipeCount += 1;
+
+        // console.log(pipes[0].pos.y - players[0].pos.y)
+
+        for(let i = 0; i < pipes.length; i++){
+            pipes[i].draw();
+        }
+
+        for(let i = 0; i < players.length; i++){
+            players[i].think();
+            players[i].draw();
+            players[i].update();
+        }
+
+        for(let i = 0; i < players.length; i++){
+            for(let j = 0; j < pipes.length; j++){
+                if(checkCollision(players[i], pipes[j])){
+                    console.log("a");
+                }
+            }
+        }
+
+        game.ctx.restore();
+        // } else {
+        //     game.notReadyScreen();
+        // }
+    }, 1000/60);
 }
