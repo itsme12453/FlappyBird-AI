@@ -1,5 +1,5 @@
 // const nn = new NeuralNetwork(3, 4, 1);
-const PLAYER_COUNT = 100;
+const PLAYER_COUNT = 1;
 
 let players = [];
 let playing = false;
@@ -125,12 +125,12 @@ function PipePair(pos){
 }
 
 document.addEventListener("keydown", function(e) {
-    if ((e.key == " " || e.code == "Space") && !player.jump) {
+    if ((e.key == " " || e.code == "Space") && !players[0].jump) {
         if (!playing) {
             playing = true;
         }
 
-        // player.jump = true;
+        players[0].jump = true;
     }
 });
 
@@ -141,13 +141,21 @@ document.addEventListener("keydown", function(e) {
 // });
 
 function checkCollision(player, pipe){
-    if(pipe.pos.x < player.pos.x){
-        return false;
-    }
+    // if(pipe.pos.x < player.pos.x - 40){
+    //     return false;
+    // }
+
+    // if (player.pos.y < pipe.topHeight && player.pos.y > pipe.bottomHeight && player.pos.x >= pipe.pos.x){
+    //     console.log("a");
+    // }
+
+    // return true;
 }
 
 let pipeX = 600;
 let pipeCount = 0;
+
+let closestPipe = 1;
 
 function animate() {
     setInterval(function() {
@@ -163,25 +171,37 @@ function animate() {
         }
         pipeCount += 1;
 
-        // console.log(pipes[0].pos.y - players[0].pos.y)
+        console.log(pipes.length);
 
         for(let i = 0; i < pipes.length; i++){
+            for(let j = 0; j < players.length; j++){
+                if(pipes[i].pos.x < players[j].pos.x - 540){
+                    pipes.splice(0, 1);
+                }
+
+                // if(players[j].pos.x )
+            }
+
+            // if(pipes[i].pos.x < players[0].pos.x - 540){
+            //     pipes.splice(0, 1);
+            // }
+
             pipes[i].draw();
         }
 
         for(let i = 0; i < players.length; i++){
-            players[i].think();
+            // players[i].think();
             players[i].draw();
             players[i].update();
         }
 
-        for(let i = 0; i < players.length; i++){
-            for(let j = 0; j < pipes.length; j++){
-                if(checkCollision(players[i], pipes[j])){
-                    console.log("a");
-                }
-            }
-        }
+        // for(let i = 0; i < players.length; i++){
+        //     for(let j = 0; j < pipes.length; j++){
+        //         if(checkCollision(players[i], pipes[j])){
+        //             console.log("a");
+        //         }
+        //     }
+        // }
 
         game.ctx.restore();
         // } else {
