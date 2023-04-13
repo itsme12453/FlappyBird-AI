@@ -1,29 +1,51 @@
-let player;
+const POPULATION_TOTAL = 350;
+
+let players = [];
+let playersDup = [];
 let pipes = [];
+let counter = 0;
 
 function setup() {
     createCanvas(1000, 500);
-    player = new Player();
-    pipes.push(new Pipe());
+
+    for (let i = 0; i < POPULATION_TOTAL; i++) {
+        players.push(new Player());
+    }
+
+    // pipes.push(new Pipe());
 }
 
 function draw() {
     background(220);
 
-    player.think(pipes);
-    player.show();
-    player.update();
-
-    if (frameCount % 100 == 0) {
+    if (counter % 75 == 0) {
         pipes.push(new Pipe());
     }
+
+    for (let player of players) {
+        player.think(pipes);
+        player.show();
+        player.update();   
+    }
+
+    if (players.length == 0) {
+        counter = 0;
+        nextGeneration();
+        pipes = [];
+
+        pipes.push(new Pipe());
+    }
+
+    counter += 1;
 
     for (let i = pipes.length - 1; i >= 0; i--) {
         pipes[i].show();
         pipes[i].update();
 
-        if (pipes[i].hits(player)) {
-            // console.log("GAME OVER");
+        for (let j = players.length - 1; j >= 0; j--){
+            if (pipes[i].hits(players[j])) {
+                playersDup.push(players.splice(j, 1)[0]);
+            }
         }
 
         if (pipes[i].offscreen()) {
@@ -39,7 +61,7 @@ function draw() {
 // }
 
 class Player {
-    constructor() {
+    constructor(brain) {
         this.y = height / 2;
         this.x = 64;
         this.gravity = 0.6;
@@ -47,26 +69,52 @@ class Player {
         this.velocity = 0;
         this.size = 30;
 
-        this.brain = new NeuralNetwork(4, 4, 2);
-    }
+        this.score = 0;
+        this.fitness = 0;
 
-    think(pipes) {
-        // let inputs = [];
-        
-        // inputs[0] = this.y; //y position
-        // inputs[1] = pipes[0].top;
-
-        let inputs = [Math.random(), Math.random(), Math.random(), Math.random()]
-        let output = this.brain.predict(inputs);
-
-        if (output[0] > output[1]){
-            player.up();
+        if(brain){
+            this.brain = brain.copy();
+        } else {
+            this.brain = new NeuralNetwork(4, 4, 2);
         }
     }
 
+    think(pipes) {
+        let closest = null;
+        let closestDist = Infinity;
+
+        for (let i = 0; i < pipes.length; i++) {
+            let d = pipes[i].x - this.x;
+
+            if (d < closestDist && d > 0){
+                closest = pipes[i];
+                closestDist = d;
+            }
+        }
+
+        let inputs = [];
+        
+        inputs[0] = this.y / height;
+        inputs[1] = closest.topHeight / height;
+        inputs[2] = closest.bottomHeight / height;
+        inputs[3] = closest.x / width;
+
+        // let inputs = [Math.random(), Math.random(), Math.random(), Math.random()]
+        let output = this.brain.predict(inputs);
+
+        if (output[0] > output[1]){
+            this.up();
+        }
+    }
+
+    mutate() {
+        this.brain.mutate(0.1);
+    }
+
     show() {
-        noStroke();
-        fill(0);
+        // noStroke();
+        stroke(100);
+        fill(0, 75);
         ellipse(this.x, this.y, this.size, this.size);
     }
 
@@ -75,6 +123,8 @@ class Player {
     }
 
     update() {
+        this.score += 1;
+
         this.velocity += this.gravity;
         this.velocity *= 0.9;
         this.y += this.velocity;
@@ -93,11 +143,11 @@ class Player {
 
 class Pipe {
     constructor() {
-        this.spacing = 125;
-        this.topHeight = random(height / 6, 3 / 4 * height);
+        this.spacing = 150;
+        this.topHeight = random(height / 6, min(height/1.5, 3 / 4 * height));
         this.bottomHeight = height - (this.topHeight + this.spacing);
         this.x = width;
-        this.width = 30;
+        this.width = 50;
         this.speed = 4;
     }
 
