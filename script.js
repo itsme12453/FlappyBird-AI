@@ -1,193 +1,126 @@
-// const nn = new NeuralNetwork(3, 4, 1);
-const PLAYER_COUNT = 100;
-
-let players = [];
-let playing = false;
+let player;
 let pipes = [];
 
-function Vector2D(x, y) {
-    this.x = x;
-    this.y = y;
+function setup() {
+    createCanvas(1000, 500);
+    player = new Player();
+    pipes.push(new Pipe());
 }
 
-function RandInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
-}
+function draw() {
+    background(220);
 
-function startGame() {
-    game.start();
-    game.notReadyScreen();
+    player.think(pipes);
+    player.show();
+    player.update();
 
-    for (i = 0; i < PLAYER_COUNT; i++){
-        players.push(new Player(new Vector2D(150, 250), 3));
+    if (frameCount % 100 == 0) {
+        pipes.push(new Pipe());
     }
-    // player = new Player(new Vector2D(150, 250), 3);
 
-    animate();
+    for (let i = pipes.length - 1; i >= 0; i--) {
+        pipes[i].show();
+        pipes[i].update();
+
+        if (pipes[i].hits(player)) {
+            // console.log("GAME OVER");
+        }
+
+        if (pipes[i].offscreen()) {
+            pipes.splice(i, 1);
+        }
+    }
 }
 
-let game = {
-    start: function() {
-        this.canvas = document.getElementById("canvas");
-        this.ctx = canvas.getContext("2d");
+// function keyPressed() {
+//     if (key == " ") {
+//         player.up();
+//     }
+// }
 
-        this.canvas.width = 1000;
-        this.canvas.height = 500;
-    },
-    clear: function() {
-        this.ctx.clearRect(0, 0, innerWidth, innerHeight);
-    },
-    notReadyScreen: function() {
-        this.ctx.font = "30px Arial";
-        this.ctx.textAlign = "center";
-        this.ctx.fillText(
-            "Press Spacebar to start",
-            this.canvas.width / 2,
-            this.canvas.height / 2
-        );
-    },
-};
+class Player {
+    constructor() {
+        this.y = height / 2;
+        this.x = 64;
+        this.gravity = 0.6;
+        this.lift = -15;
+        this.velocity = 0;
+        this.size = 30;
 
-function Player(pos, speed) {
-    this.pos = pos;
-    this.speed = speed;
-    this.jump = false;
-    this.velocity = 0;
-    this.jumpSpeed = 8;
-    this.gravity = 0.5;
-    this.maxVelocity = 10; // maximum downward velocity
+        this.brain = new NeuralNetwork(4, 4, 2);
+    }
 
-    this.brain = new NeuralNetwork(4, 4, 2);
-    this.think = function(){
-        // let inputs = [];
-        // inputs[0] = this.pos.y;
+    think(pipes) {
+        let inputs = [];
+        
+        inputs[0] = this.y; //y position
+        inputs[1] = pipes[0].top;
 
-        // console.log(pipes);
-
-        let inputs = [Math.random(), Math.random(), Math.random(), Math.random()]
+        // let inputs = [Math.random(), Math.random(), Math.random(), Math.random()]
         let output = this.brain.predict(inputs);
 
-        // console.log(output);
-
         if (output[0] > output[1]){
-            this.jump = true;
-            // console.log(output);
+            player.up();
         }
-    };
-    this.draw = function() {
-        // game.ctx.fillStyle = "black";
-        // game.ctx.fillRect(this.pos.x, this.pos.y, 35, 35);
+    }
 
-        game.ctx.beginPath();
-        game.ctx.arc(this.pos.x, this.pos.y, 20, 0, 2 * Math.PI, false);
-        game.ctx.fillStyle = "black";
-        game.ctx.fill();
-    };
-    this.update = function() {
+    show() {
+        noStroke();
+        fill(0);
+        ellipse(this.x, this.y, this.size, this.size);
+    }
+
+    up() {
+        this.velocity += this.lift;
+    }
+
+    update() {
         this.velocity += this.gravity;
-        this.velocity = Math.min(this.velocity, this.maxVelocity); // limit maximum velocity
-        this.pos.y += this.velocity;
+        this.velocity *= 0.9;
+        this.y += this.velocity;
 
-        if (this.jump) {
-            this.velocity = -this.jumpSpeed;
-            this.jump = false;
+        if (this.y > height) {
+            this.y = height;
+            this.velocity = 0;
         }
 
-        if (this.pos.y < 20){
-            this.pos.y = 20;
-        } else if (this.pos.y > 500-20){
-            this.pos.y = 500-20;
+        if (this.y < 0) {
+            this.y = 0;
+            this.velocity = 0;
         }
-
-        // this.pos.x += this.speed;
-    };
-};
-
-function PipePair(pos){
-    this.pos = pos;
-    this.width = 50;
-    this.gap = 125;
-    this.minHeight = 50;
-    this.maxHeight = 325;
-
-    this.topHeight = RandInt(this.minHeight, this.maxHeight);
-    this.bottomHeight = 500 - (this.topHeight + this.gap)
-
-    this.draw = function() {
-        this.pos.x -= 3;
-
-        game.ctx.fillStyle = "black";
-        game.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.topHeight);
-
-        game.ctx.fillStyle = "black";
-        game.ctx.fillRect(this.pos.x, 500, this.width, -this.bottomHeight);
     }
 }
 
-document.addEventListener("keydown", function(e) {
-    if ((e.key == " " || e.code == "Space") && !player.jump) {
-        if (!playing) {
-            playing = true;
-        }
-
-        // player.jump = true;
+class Pipe {
+    constructor() {
+        this.spacing = 125;
+        this.topHeight = random(height / 6, 3 / 4 * height);
+        this.bottomHeight = height - (this.topHeight + this.spacing);
+        this.x = width;
+        this.width = 30;
+        this.speed = 4;
     }
-});
 
-// document.addEventListener("keyup", function(e) {
-//     if (e.key == " " || e.code == "Space") {
-//         player.jump = false;
-//     }
-// });
+    show() {
+        fill(0);
+        rect(this.x, 0, this.width, this.topHeight);
+        rect(this.x, height - this.bottomHeight, this.width, this.bottomHeight);
+    }
 
-function checkCollision(player, pipe){
-    if(pipe.pos.x < player.pos.x){
+    update() {
+        this.x -= this.speed;
+    }
+
+    offscreen() {
+        return (this.x < -this.width);
+    }
+
+    hits(player) {
+        if ((player.y - player.size / 2) < this.topHeight || (player.y + player.size / 2) > (height - this.bottomHeight)) {
+            if (player.x > this.x && player.x < (this.x + this.width)) {
+                return true;
+            }
+        }
         return false;
     }
 }
-
-let pipeX = 600;
-let pipeCount = 0;
-
-function animate() {
-    setInterval(function() {
-        // if (playing) {
-        game.ctx.save();
-
-        game.clear();
-        game.ctx.translate(((game.canvas.width / 2) - players[0].pos.x), 0);
-
-        if (pipeCount % 60 == 0){
-            pipes.push(new PipePair(new Vector2D(pipeX, 0)))
-            pipeX += 100;
-        }
-        pipeCount += 1;
-
-        // console.log(pipes[0].pos.y - players[0].pos.y)
-
-        for(let i = 0; i < pipes.length; i++){
-            pipes[i].draw();
-        }
-
-        for(let i = 0; i < players.length; i++){
-            players[i].think();
-            players[i].draw();
-            players[i].update();
-        }
-
-        for(let i = 0; i < players.length; i++){
-            for(let j = 0; j < pipes.length; j++){
-                if(checkCollision(players[i], pipes[j])){
-                    console.log("a");
-                }
-            }
-        }
-
-        game.ctx.restore();
-        // } else {
-        //     game.notReadyScreen();
-        // }
-    }, 1000/60);
-}
-
-startGame();
